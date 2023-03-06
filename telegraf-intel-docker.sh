@@ -8,11 +8,11 @@ DOCKER_CONTAINER_NAME=$3
 DOCKER_DPDK_SOCKET_PATH="/var/run/dpdk/rte"
 DOCKER_PMU_EVENTS_PATH="/var/cache/pmu"
 
-readonly TELEGRAF_VERSION='1.21.3-alpine'
+readonly TELEGRAF_VERSION='1.23.4-alpine'
 
 readonly DOCKER_IMAGE_NAME=$2
-readonly DOCKER_IMAGE_TAG='1.1'
-readonly DOCKER_TELEGRAF_BUILD_IMAGE='telegraf:1.21.3-alpine'
+readonly DOCKER_IMAGE_TAG='1.0'
+readonly DOCKER_TELEGRAF_BUILD_IMAGE='telegraf:1.23.4-alpine'
 readonly DOCKER_TELEGRAF_FINAL_BASE_IMAGE='alpine:3.15.0'
 
 readonly CONTAINER_MEMORY_LIMIT=200m
@@ -59,12 +59,14 @@ function run_docker() {
             -e HOSTNAME="telegraf-intel" \
             -e HOST_PROC=/hostfs/proc \
             -e HOST_MOUNT_PREFIX=/hostfs \
+            -e http_proxy= \
+            -e https_proxy= \
             --memory="$CONTAINER_MEMORY_LIMIT" \
             --cpu-shares="$CONTAINER_CPU_SHARES" \
             --restart on-failure:5 \
             --health-cmd='stat /etc/passwd || exit 1' \
             --security-opt=no-new-privileges \
-            --pids-limit 100 \
+            --pids-limit 500 \
             -i -t "$DOCKER_IMAGE_NAME":$DOCKER_IMAGE_TAG
 }
 

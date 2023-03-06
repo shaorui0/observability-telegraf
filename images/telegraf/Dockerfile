@@ -23,14 +23,15 @@
 
 ARG TELEGRAF_TAG
 FROM telegraf:$TELEGRAF_TAG AS builder
-
+ENV http_proxy http://child-prc.intel.com:913
+ENV https_proxy http://child-prc.intel.com:913
 RUN apk update && \
     apk add --update --no-cache \
-    zlib=~1.2.12 \
+    # zlib=~1.2.12-r3 \
     build-base=~0.5 \
     bash=~5.1 \
     sudo=~1.9 \
-    git=~2.34 \
+    git \
     alpine-sdk=~1.0 \
     libffi-dev=~3.4 \
     openssl-dev=~1.1 && \
@@ -43,22 +44,25 @@ COPY ./images/telegraf/script/install_intel_cmt_cat.sh ./
 RUN ./install_intel_cmt_cat.sh
 
 # Build final image where telegraf is running.
-FROM alpine:3.15.0
+FROM frolvlad/alpine-miniconda3
+
+ENV http_proxy http://child-prc.intel.com:913
+ENV https_proxy http://child-prc.intel.com:913
 
 RUN export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" && \
     apk update && \
     apk add --update --no-cache \
-    zlib=~1.2.12 \
-    util-linux=~2.37 \
-    bash=~5.1 \
+    # zlib=~1.2.13-r0 \
+    util-linux=~2.38.1-r1 \
+    bash=~5.2.15-r0 \
     sudo=~1.9 \
-    smartmontools=~7.2 \
-    nvme-cli=~1.16 \
+    smartmontools=~7.3-r0 \
+    nvme-cli=~2.2.1-r0 \
     rasdaemon=~0.6 \
     iptables=~1.8 \
     ipmitool=~1.8 \
     su-exec=~0.2 \
-    iputils=~20210722 && \
+    iputils=~20211215-r0 && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR "/telegraf_docker/"
