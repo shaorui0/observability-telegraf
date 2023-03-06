@@ -22,6 +22,7 @@
 # 
 
 ARG TELEGRAF_TAG
+ARG FINAL_BASE_IMAGE
 FROM telegraf:$TELEGRAF_TAG AS builder
 ENV http_proxy http://child-prc.intel.com:913
 ENV https_proxy http://child-prc.intel.com:913
@@ -66,19 +67,12 @@ RUN export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" &
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR "/telegraf_docker/"
-
-COPY ./images/telegraf/script/sudo_configuration.sh .
 COPY ./DEPENDENCIES_SOURCE_CODE_INFO.md .
-
-# Copy dependecies from previous step called builder, where intel-cmt-cat is installed.
-COPY --from=builder /usr/local/lib/libpqos.* /usr/lib/
 COPY --from=builder /usr/local/bin/ /usr/local/bin/
 COPY --from=builder /usr/share/snmp/mibs/ /usr/share/snmp/mibs/
 COPY --from=builder /usr/bin/telegraf /usr/bin/telegraf
 COPY --from=builder entrypoint.sh .
 
-# Set sudo config for specific plugins, and just in case update alternatives, because sometimes docker can mess it up.
-RUN ./sudo_configuration.sh
 
 # Override entrypoint
 ENTRYPOINT ["sh", "-c", "rasdaemon -r && sleep 10s && ./entrypoint.sh telegraf"]

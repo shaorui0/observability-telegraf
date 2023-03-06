@@ -32,8 +32,9 @@ fi
 # Build docker image.
 function build_docker() {
   echo -e "${GREEN}Building Telegraf Docker image...${NO_COLOR}"
+  echo -e "Using telegraf version: ${TELEGRAF_VERSION}. Final base image: ${DOCKER_TELEGRAF_FINAL_BASE_IMAGE}"
   echo "If this is your first time building image this might take a minute..."
-  docker build --build-arg TELEGRAF_TAG=$TELEGRAF_VERSION -f images/telegraf/Dockerfile . -t "$DOCKER_IMAGE_NAME":$DOCKER_IMAGE_TAG
+  docker build --build-arg TELEGRAF_TAG=$TELEGRAF_VERSION --build-arg FINAL_BASE_IMAGE=$DOCKER_TELEGRAF_FINAL_BASE_IMAGE -f images/telegraf/Dockerfile . -t "$DOCKER_IMAGE_NAME":$DOCKER_IMAGE_TAG
 }
 
 # Build and run docker container.
