@@ -1,0 +1,117 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: telegraf-intel
+  namespace: unified-telemetry-framework
+  labels:
+    app: telegraf-intel
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: telegraf-intel
+  template:
+    metadata:
+      labels:
+        app: telegraf-intel
+    spec:
+      hostNetwork: true
+      containers:
+      - name: telegraf-intel
+        image: telegraf-image:1.0
+        livenessProbe:
+          exec:
+            command:
+            - stat
+            - /etc/passwd
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        env:
+        - name: HOSTNAME
+          value: "telegraf-intel"
+        - name: HOST_PROC
+          value: "/hostfs/proc"
+        - name: HOST_MOUNT_PREFIX
+          value: "/hostfs"
+        - name: http_proxy
+          value: ""
+        - name: https_proxy
+          value: ""
+        securityContext:
+          privileged: true
+        resources:
+          limits:
+            memory: "200Mi"
+            cpu: "0.5"
+        volumeMounts:
+        - name: telegraf-config
+          mountPath: /etc/telegraf/
+          readOnly: true
+        - name: sys-kernel-debug
+          mountPath: /sys/kernel/debug
+          readOnly: true
+        - name: sys-fs-resctrl
+          mountPath: /sys/fs/resctrl
+        - name: proc
+          mountPath: /hostfs/proc
+          readOnly: true
+        - name: run-udev
+          mountPath: /run/udev
+          readOnly: true
+        - name: var-run-utmp
+          mountPath: /var/run/utmp
+          readOnly: true
+        - name: dpdk-socket-path
+          mountPath: /var/run/dpdk/rte
+          readOnly: true
+        - name: pmu-events-path
+          mountPath: /var/cache/pmu
+          readOnly: true
+        # Uncomment this if USE_HOST_RASDAEMON is true
+        # - name: rasdaemon-path
+        #   mountPath: /var/lib/rasdaemon
+        #   readOnly: true
+      volumes:
+      - name: telegraf-config
+        hostPath:
+          path: /home/admin/microservice_governance/SG/source/telemetry_framework/deployment/observability-telegraf/telegraf/
+      - name: sys-kernel-debug
+        hostPath:
+          path: /sys/kernel/debug
+      - name: sys-fs-resctrl
+        hostPath:
+          path: /sys/fs/resctrl
+      - name: proc
+        hostPath:
+          path: /proc
+      - name: run-udev
+        hostPath:
+          path: /run/udev
+      - name: var-run-utmp
+        hostPath:
+          path: /var/run/utmp
+      - name: dpdk-socket-path
+        hostPath:
+          path: /var/run/dpdk/rte
+      - name: pmu-events-path
+        hostPath:
+          path: /var/cache/pmu
+      # Uncomment this if USE_HOST_RASDAEMON is true
+      # - name: rasdaemon-path
+      #   hostPath:
+      #     path: /var/lib/rasdaemon
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: telegraf-prometheus
+  namespace: unified-telemetry-framework
+spec:
+  type: NodePort
+  ports:
+  - port: 9279
+    targetPort: 9279
+    nodePort: 30002
+  selector:
+    app: telegraf-intel
